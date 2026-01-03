@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email OTP API Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.secondary:hover {
+            background: #5a6268;
+        }
+
+        .response-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .response-box.success {
+            border-color: #28a745;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .response-box.error {
+            border-color: #dc3545;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .buttons-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .buttons-group.full {
+            grid-template-columns: 1fr;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 3px;
+            font-size: 13px;
+            color: #0c5aa0;
+        }
+
+        .divider {
+            grid-column: 1 / -1;
+        }
+
+        .endpoint-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .endpoint-buttons button {
+            font-size: 12px;
+            padding: 10px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .code-example {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            font-size: 12px;
+            padding: 5px 10px;
+            margin-top: 5px;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔐 Email OTP API Tester</h1>
+            <p>Test your Email OTP Verification Service endpoints</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Configuration Panel -->
+            <div class="card">
+                <h2>⚙️ Configuration</h2>
+                
+                <div class="info-box">
+                    ℹ️ Enter your Railway API URL and API Key below
+                </div>
+
+                <div class="form-group">
+                    <label>API URL (without trailing slash)</label>
+                    <input 
+                        type="text" 
+                        id="apiUrl" 
+                        placeholder="https://email-otp-api-production.up.railway.app"
+                        value="https://email-otp-api-production.up.railway.app"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>API Key (X-API-KEY)</label>
+                    <input 
+                        type="password" 
+                        id="apiKey" 
+                        placeholder="your-api-key-here"
+                        value="9bRdpHjDyevSnhdsubbwCjU3McNCc6Dr2PX4dk_ipFc"
+                    >
+                </div>
+
+                <button class="secondary" onclick="toggleApiKeyVisibility()">👁️ Show API Key</button>
+
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+
+                <h2 style="font-size: 16px; margin-top: 20px; border: none;">🧪 Test Endpoints</h2>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input 
+                        type="email" 
+                        id="testEmail" 
+                        placeholder="your-email@gmail.com"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>OTP Code (6 digits)</label>
+                    <input 
+                        type="text" 
+                        id="testOtp" 
+                        placeholder="123456"
+                        maxlength="6"
+                    >
+                </div>
+
+                <div class="endpoint-buttons">
+                    <button onclick="testHealthCheck()">Health Check</button>
+                    <button onclick="testSendOtp()">Send OTP</button>
+                    <button onclick="testVerifyOtp()">Verify OTP</button>
+                    <button onclick="testVerificationStatus()">Check Status</button>
+                </div>
+
+                <button class="secondary" onclick="clearAll()" style="margin-top: 15px;">🗑️ Clear All</button>
+            </div>
+
+            <!-- Response Panel -->
+            <div class="card">
+                <h2>📊 Response</h2>
+                
+                <div id="status" class="status" style="display: none;"></div>
+                
+                <div id="responseBox" class="response-box">
+                    Responses will appear here...
+                </div>
+
+                <div style="margin-top: 15px; font-size: 12px; color: #666;">
+                    <strong>Last Request:</strong> <span id="lastRequest">None</span>
+                </div>
+
+                <div style="margin-top: 15px; font-size: 12px; color: #666;">
+                    <strong>Response Time:</strong> <span id="responseTime">-</span>
+                </div>
+
+                <button class="secondary" onclick="copyResponse()" style="margin-top: 15px;">📋 Copy Response</button>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card full-width">
+                <h2>⚡ Quick Actions</h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px;">
+                    <button onclick="testAllEndpoints()">🚀 Test All</button>
+                    <button onclick="generateRandomOtp()">🎲 Generate OTP</button>
+                    <button onclick="openSwaggerUI()">📖 Open Swagger UI</button>
+                    <button onclick="copyApiUrl()">📋 Copy API URL</button>
+                </div>
+            </div>
+
+            <!-- Documentation -->
+            <div class="card full-width">
+                <h2>📚 API Endpoints</h2>
+                
+                <div style="font-size: 13px; line-height: 1.8; color: #333;">
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #667eea;">GET /health</strong>
+                        <div style="color: #666;">Health check endpoint (no auth required)</div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #667eea;">POST /send-otp</strong>
+                        <div style="color: #666;">Send OTP to email address</div>
+                        <div style="color: #999; font-size: 12px;">Body: {"email": "user@example.com"}</div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #667eea;">POST /verify-otp</strong>
+                        <div style="color: #666;">Verify OTP and mark user as verified</div>
+                        <div style="color: #999; font-size: 12px;">Body: {"email": "user@example.com", "otp": "123456"}</div>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: #667eea;">GET /verification-status/{email}</strong>
+                        <div style="color: #666;">Check if email is verified</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let startTime;
+        let currentResponse;
+
+        // Toggle API Key visibility
+        function toggleApiKeyVisibility() {
+            const apiKeyInput = document.getElementById('apiKey');
+            apiKeyInput.type = apiKeyInput.type === 'password' ? 'text' : 'password';
+        }
+
+        // Show status
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status ' + type;
+            statusEl.style.display = 'block';
+        }
+
+        // Display response
+        function displayResponse(data, type = 'success') {
+            const responseBox = document.getElementById('responseBox');
+            currentResponse = JSON.stringify(data, null, 2);
+            responseBox.textContent = currentResponse;
+            responseBox.className = 'response-box ' + type;
+            
+            const endTime = performance.now();
+            const duration = (endTime - startTime).toFixed(2);
+            document.getElementById('responseTime').textContent = duration + ' ms';
+        }
+
+        // Test Health Check
+        async function testHealthCheck() {
+            startTime = performance.now();
+            const apiUrl = document.getElementById('apiUrl').value;
+            
+            try {
+                showStatus('🔄 Testing health check...', 'loading');
+                document.getElementById('lastRequest').textContent = 'GET /health';
+                
+                const response = await fetch(`${apiUrl}/health`);
+                const data = await response.json();
+                
+                displayResponse(data, response.ok ? 'success' : 'error');
+                showStatus(response.ok ? '✅ Health check successful!' : '❌ Health check failed', response.ok ? 'success' : 'error');
+            } catch (error) {
+                displayResponse({ error: error.message }, 'error');
+                showStatus('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // Test Send OTP
+        async function testSendOtp() {
+            startTime = performance.now();
+            const apiUrl = document.getElementById('apiUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const email = document.getElementById('testEmail').value;
+            
+            if (!email) {
+                showStatus('❌ Please enter an email address', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('🔄 Sending OTP...', 'loading');
+                document.getElementById('lastRequest').textContent = `POST /send-otp - Email: ${email}`;
+                
+                const response = await fetch(`${apiUrl}/send-otp`, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-KEY': apiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const data = await response.json();
+                displayResponse(data, response.ok ? 'success' : 'error');
+                showStatus(response.ok ? '✅ OTP sent! Check your email.' : '❌ Failed to send OTP', response.ok ? 'success' : 'error');
+            } catch (error) {
+                displayResponse({ error: error.message }, 'error');
+                showStatus('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // Test Verify OTP
+        async function testVerifyOtp() {
+            startTime = performance.now();
+            const apiUrl = document.getElementById('apiUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const email = document.getElementById('testEmail').value;
+            const otp = document.getElementById('testOtp').value;
+            
+            if (!email || !otp) {
+                showStatus('❌ Please enter email and OTP', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('🔄 Verifying OTP...', 'loading');
+                document.getElementById('lastRequest').textContent = `POST /verify-otp - Email: ${email}, OTP: ${otp}`;
+                
+                const response = await fetch(`${apiUrl}/verify-otp`, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-KEY': apiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email, otp: otp })
+                });
+                
+                const data = await response.json();
+                displayResponse(data, response.ok ? 'success' : 'error');
+                showStatus(response.ok ? '✅ Email verified successfully!' : '❌ OTP verification failed', response.ok ? 'success' : 'error');
+            } catch (error) {
+                displayResponse({ error: error.message }, 'error');
+                showStatus('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // Test Verification Status
+        async function testVerificationStatus() {
+            startTime = performance.now();
+            const apiUrl = document.getElementById('apiUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const email = document.getElementById('testEmail').value;
+            
+            if (!email) {
+                showStatus('❌ Please enter an email address', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('🔄 Checking verification status...', 'loading');
+                document.getElementById('lastRequest').textContent = `GET /verification-status/${email}`;
+                
+                const response = await fetch(`${apiUrl}/verification-status/${email}`, {
+                    headers: {
+                        'X-API-KEY': apiKey
+                    }
+                });
+                
+                const data = await response.json();
+                displayResponse(data, response.ok ? 'success' : 'error');
+                showStatus(response.ok ? '✅ Status retrieved' : '❌ Failed to get status', response.ok ? 'success' : 'error');
+            } catch (error) {
+                displayResponse({ error: error.message }, 'error');
+                showStatus('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // Test All Endpoints
+        async function testAllEndpoints() {
+            await testHealthCheck();
+            await new Promise(r => setTimeout(r, 1000));
+            await testSendOtp();
+            await new Promise(r => setTimeout(r, 1000));
+            showStatus('✅ All tests completed! Check each response above.', 'success');
+        }
+
+        // Generate Random OTP
+        function generateRandomOtp() {
+            const otp = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+            document.getElementById('testOtp').value = otp;
+            showStatus('🎲 Generated OTP: ' + otp, 'success');
+        }
+
+        // Open Swagger UI
+        function openSwaggerUI() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            window.open(apiUrl + '/docs', '_blank');
+        }
+
+        // Copy API URL
+        function copyApiUrl() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            navigator.clipboard.writeText(apiUrl);
+            showStatus('📋 API URL copied to clipboard!', 'success');
+        }
+
+        // Copy Response
+        function copyResponse() {
+            if (currentResponse) {
+                navigator.clipboard.writeText(currentResponse);
+                showStatus('📋 Response copied to clipboard!', 'success');
+            }
+        }
+
+        // Clear All
+        function clearAll() {
+            document.getElementById('testEmail').value = '';
+            document.getElementById('testOtp').value = '';
+            document.getElementById('responseBox').textContent = 'Responses will appear here...';
+            document.getElementById('status').style.display = 'none';
+            document.getElementById('lastRequest').textContent = 'None';
+            document.getElementById('responseTime').textContent = '-';
+        }
+    </script>
+</body>
+</html>

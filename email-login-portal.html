@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email OTP Login Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .header small {
+            color: #999;
+            display: block;
+            font-size: 12px;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            background: #f8f9ff;
+        }
+
+        input::placeholder {
+            color: #999;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #667eea;
+            border: 2px solid #667eea;
+            margin-top: 8px;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .alert {
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .alert-icon {
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .timer {
+            text-align: center;
+            margin: 15px 0;
+            color: #667eea;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .timer.warning {
+            color: #ff6b6b;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #999;
+            font-size: 13px;
+        }
+
+        .footer-links {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .footer-links a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 13px;
+            margin: 0 10px;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .otp-input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .otp-input {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            border: 2px solid #e0e0e0 !important;
+            border-radius: 8px !important;
+            padding: 0 !important;
+        }
+
+        .otp-input:focus {
+            border-color: #667eea !important;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            margin-left: 5px;
+            animation: dots 1.4s infinite;
+        }
+
+        .loading::after,
+        .loading::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            margin: 0 4px;
+            animation: dots 1.4s infinite;
+        }
+
+        .loading::before {
+            animation-delay: -0.32s;
+        }
+
+        .loading::after {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes dots {
+            0%, 60%, 100% {
+                opacity: 0.5;
+            }
+            30% {
+                opacity: 1;
+            }
+        }
+
+        .success-animation {
+            animation: successPulse 0.6s ease-out;
+        }
+
+        @keyframes successPulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-icon {
+            font-size: 60px;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: successPulse 0.6s ease-out;
+        }
+
+        .user-email {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            text-align: center;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .resend-info {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .resend-info a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .resend-info a:hover {
+            text-decoration: underline;
+        }
+
+        .resend-info a:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .config-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #667eea;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .config-link:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 20px;
+        }
+
+        .close-modal {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <!-- Config Button -->
+    <button class="config-link" onclick="openConfigModal()" title="Configure API Settings">⚙️</button>
+
+    <!-- Configuration Modal -->
+    <div id="configModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close-modal" onclick="closeConfigModal()">&times;</button>
+                <h2>API Configuration</h2>
+            </div>
+            <div class="form-group">
+                <label>API URL</label>
+                <input 
+                    type="text" 
+                    id="configApiUrl" 
+                    placeholder="https://email-otp-api-production.up.railway.app"
+                    value="https://email-otp-api-production.up.railway.app"
+                >
+            </div>
+            <div class="form-group">
+                <label>API Key (X-API-KEY)</label>
+                <input 
+                    type="password" 
+                    id="configApiKey" 
+                    placeholder="your-api-key-here"
+                >
+            </div>
+            <button class="btn btn-primary" onclick="saveConfig()">Save Configuration</button>
+            <button class="btn btn-secondary" onclick="closeConfigModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Main Login Container -->
+    <div class="container">
+        <div class="login-box">
+            <!-- Header -->
+            <div class="header">
+                <div class="logo">📧</div>
+                <h1>Secure Login</h1>
+                <p>Sign in with your email</p>
+                <small>OTP-based authentication</small>
+            </div>
+
+            <!-- Alert Messages -->
+            <div id="alert" class="alert"></div>
+
+            <!-- Step 1: Email Entry -->
+            <div id="emailSection" class="form-section active">
+                <form onsubmit="handleSendOtp(event)">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            placeholder="name@example.com"
+                            required
+                            autofocus
+                        >
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="sendOtpBtn">
+                        Send OTP to Email
+                    </button>
+                </form>
+
+                <div class="footer-links">
+                    <small>We'll send a 6-digit code to your email inbox</small>
+                </div>
+            </div>
+
+            <!-- Step 2: OTP Verification -->
+            <div id="otpSection" class="form-section">
+                <div class="user-email" id="displayEmail"></div>
+
+                <div class="form-group">
+                    <label>Enter OTP Code</label>
+                    <input 
+                        type="text" 
+                        id="otpInput" 
+                        placeholder="Enter 6-digit code"
+                        maxlength="6"
+                        inputmode="numeric"
+                        pattern="[0-9]{6}"
+                    >
+                </div>
+
+                <div class="timer" id="otpTimer"></div>
+
+                <button class="btn btn-primary" onclick="handleVerifyOtp()" id="verifyOtpBtn">
+                    Verify OTP & Login
+                </button>
+
+                <button class="btn btn-secondary" onclick="backToEmail()">
+                    Use Different Email
+                </button>
+
+                <div class="resend-info">
+                    Didn't receive the code? 
+                    <a href="#" onclick="handleResendOtp(event)" id="resendLink">Resend OTP</a>
+                </div>
+            </div>
+
+            <!-- Step 3: Success -->
+            <div id="successSection" class="form-section">
+                <div class="success-icon">✅</div>
+                <h2 style="text-align: center; color: #28a745; margin-bottom: 10px;">Login Successful!</h2>
+                <div class="user-email" id="successEmail"></div>
+                <p style="text-align: center; color: #666; margin: 15px 0; font-size: 14px;">
+                    Your email has been verified. You are now logged in.
+                </p>
+                <button class="btn btn-primary" onclick="startNewLogin()">
+                    Login Another Account
+                </button>
+                <button class="btn btn-secondary" onclick="copySuccessInfo()">
+                    Copy Login Details
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        let config = {
+            apiUrl: localStorage.getItem('apiUrl') || 'https://email-otp-api-production.up.railway.app',
+            apiKey: localStorage.getItem('apiKey') || '9bRdpHjDyevSnhdsubbwCjU3McNCc6Dr2PX4dk_ipFc'
+        };
+
+        let currentEmail = '';
+        let otpExpiryTime = 0;
+        let resendCount = 0;
+
+        // Load saved config on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            if (config.apiUrl) {
+                document.getElementById('configApiUrl').value = config.apiUrl;
+            }
+            if (config.apiKey) {
+                document.getElementById('configApiKey').value = config.apiKey;
+            }
+        });
+
+        // Config Modal Functions
+        function openConfigModal() {
+            document.getElementById('configModal').classList.add('show');
+        }
+
+        function closeConfigModal() {
+            document.getElementById('configModal').classList.remove('show');
+        }
+
+        function saveConfig() {
+            const apiUrl = document.getElementById('configApiUrl').value.trim();
+            const apiKey = document.getElementById('configApiKey').value.trim();
+
+            if (!apiUrl || !apiKey) {
+                showAlert('❌ Please enter both API URL and API Key', 'error');
+                return;
+            }
+
+            config.apiUrl = apiUrl;
+            config.apiKey = apiKey;
+
+            localStorage.setItem('apiUrl', apiUrl);
+            localStorage.setItem('apiKey', apiKey);
+
+            showAlert('✅ Configuration saved successfully!', 'success');
+            setTimeout(() => closeConfigModal(), 1500);
+        }
+
+        // Alert Helper
+        function showAlert(message, type) {
+            const alertEl = document.getElementById('alert');
+            alertEl.className = `alert alert-${type} show`;
+            alertEl.innerHTML = message;
+        }
+
+        // Form Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.form-section').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+        }
+
+        // Step 1: Send OTP
+        async function handleSendOtp(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('email').value.trim();
+
+            if (!config.apiKey) {
+                showAlert('❌ Please configure API Key in settings', 'error');
+                return;
+            }
+
+            const sendBtn = document.getElementById('sendOtpBtn');
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = 'Sending<span class="loading"></span>';
+
+            try {
+                showAlert('📧 Sending OTP to your email...', 'info');
+
+                const response = await fetch(`${config.apiUrl}/send-otp`, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-KEY': config.apiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to send OTP');
+                }
+
+                currentEmail = email;
+                otpExpiryTime = Date.now() + (10 * 60 * 1000); // 10 minutes
+                resendCount = 0;
+
+                showAlert('✅ OTP sent successfully! Check your email inbox.', 'success');
+                
+                setTimeout(() => {
+                    document.getElementById('displayEmail').textContent = '📧 ' + email;
+                    showSection('otpSection');
+                    document.getElementById('otpInput').focus();
+                    startOtpTimer();
+                }, 500);
+
+            } catch (error) {
+                showAlert('❌ ' + error.message, 'error');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = 'Send OTP to Email';
+            }
+        }
+
+        // OTP Timer
+        function startOtpTimer() {
+            const timerEl = document.getElementById('otpTimer');
+            
+            function updateTimer() {
+                const remaining = Math.max(0, otpExpiryTime - Date.now());
+                const seconds = Math.floor(remaining / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+
+                if (remaining > 0) {
+                    timerEl.textContent = `Code expires in ${minutes}:${secs.toString().padStart(2, '0')}`;
+                    timerEl.classList.remove('warning');
+                    
+                    if (remaining < 60000) {
+                        timerEl.classList.add('warning');
+                    }
+
+                    setTimeout(updateTimer, 1000);
+                } else {
+                    timerEl.textContent = '❌ Code expired. Please request a new one.';
+                    timerEl.classList.add('warning');
+                }
+            }
+
+            updateTimer();
+        }
+
+        // Step 2: Verify OTP
+        async function handleVerifyOtp() {
+            const otp = document.getElementById('otpInput').value.trim();
+
+            if (!otp || otp.length !== 6) {
+                showAlert('❌ Please enter a valid 6-digit OTP', 'error');
+                return;
+            }
+
+            const verifyBtn = document.getElementById('verifyOtpBtn');
+            verifyBtn.disabled = true;
+            verifyBtn.innerHTML = 'Verifying<span class="loading"></span>';
+
+            try {
+                showAlert('🔐 Verifying OTP...', 'info');
+
+                const response = await fetch(`${config.apiUrl}/verify-otp`, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-KEY': config.apiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        email: currentEmail, 
+                        otp: otp 
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Invalid OTP');
+                }
+
+                showAlert('✅ Email verified successfully! Logging you in...', 'success');
+
+                setTimeout(() => {
+                    document.getElementById('successEmail').textContent = '👤 Logged in as: ' + currentEmail;
+                    showSection('successSection');
+                }, 500);
+
+            } catch (error) {
+                showAlert('❌ ' + error.message, 'error');
+            } finally {
+                verifyBtn.disabled = false;
+                verifyBtn.innerHTML = 'Verify OTP & Login';
+            }
+        }
+
+        // Resend OTP
+        async function handleResendOtp(event) {
+            event.preventDefault();
+
+            if (Date.now() > otpExpiryTime) {
+                await handleSendOtp(new Event('submit'));
+                return;
+            }
+
+            resendCount++;
+
+            if (resendCount >= 3) {
+                showAlert('❌ Too many resend attempts. Please wait for code to expire.', 'error');
+                return;
+            }
+
+            const resendLink = document.getElementById('resendLink');
+            resendLink.style.pointerEvents = 'none';
+            resendLink.style.opacity = '0.5';
+
+            try {
+                showAlert('📧 Resending OTP...', 'info');
+
+                const response = await fetch(`${config.apiUrl}/send-otp`, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-KEY': config.apiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: currentEmail })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to resend OTP');
+                }
+
+                showAlert('✅ New OTP sent! Check your email.', 'success');
+                otpExpiryTime = Date.now() + (10 * 60 * 1000);
+                startOtpTimer();
+
+            } catch (error) {
+                showAlert('❌ ' + error.message, 'error');
+            } finally {
+                setTimeout(() => {
+                    resendLink.style.pointerEvents = 'auto';
+                    resendLink.style.opacity = '1';
+                }, 3000);
+            }
+        }
+
+        // Navigation
+        function backToEmail() {
+            document.getElementById('email').value = currentEmail;
+            document.getElementById('otpInput').value = '';
+            showSection('emailSection');
+            document.getElementById('email').focus();
+        }
+
+        function startNewLogin() {
+            document.getElementById('email').value = '';
+            document.getElementById('otpInput').value = '';
+            currentEmail = '';
+            showSection('emailSection');
+            document.getElementById('email').focus();
+        }
+
+        // Copy success info
+        function copySuccessInfo() {
+            const info = `Email: ${currentEmail}\nStatus: Verified & Logged In`;
+            navigator.clipboard.writeText(info);
+            showAlert('📋 Login details copied to clipboard!', 'success');
+        }
+
+        // Enter key listeners
+        document.getElementById('email').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSendOtp(new Event('submit'));
+        });
+
+        document.getElementById('otpInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleVerifyOtp();
+        });
+
+        // Auto-format OTP input (numbers only)
+        document.getElementById('otpInput').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('configModal');
+            if (e.target === modal) {
+                closeConfigModal();
+            }
+        });
+    </script>
+</body>
+</html>
