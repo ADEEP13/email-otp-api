@@ -1,6 +1,8 @@
+import smtplib
 import random
 import string
-import requests
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 import os
 import logging
@@ -12,9 +14,12 @@ load_dotenv()
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# SendGrid Configuration
-SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
-SENDGRID_EMAIL = os.getenv("SENDGRID_EMAIL", "noreply@otpservice.com")
+# Mailtrap SMTP Configuration (Free, no domain needed)
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.mailtrap.io")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USERNAME = os.getenv("SMTP_USERNAME")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+SMTP_EMAIL = os.getenv("SMTP_EMAIL", "noreply@otpservice.com")
 
 
 def generate_otp(length: int = 6) -> str:
@@ -32,7 +37,7 @@ def generate_otp(length: int = 6) -> str:
 
 def send_otp_email(db: Session, recipient_email: str, otp_code: str = None) -> bool:
     """
-    Generate OTP, store it in database, and send via SendGrid.
+    Generate OTP, store it in database, and send via Mailtrap SMTP.
     
     Args:
         db: Database session
@@ -50,10 +55,29 @@ def send_otp_email(db: Session, recipient_email: str, otp_code: str = None) -> b
         # Store OTP in database
         store_otp(db, recipient_email, otp_code)
         
-        # Validate SendGrid API key is configured
-        if not SENDGRID_API_KEY:
-            logger.error("SENDGRID_API_KEY not configured")
+        # Validate Mailtrap credentials are configured
+        if not SMTP_USERNAME or not SMTP_PASSWORD:
+            logger.error("SMTP_USERNAME or SMTP_PASSWORD not configured")
             return False
+        
+        # Create email message
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Your OTP Verification Code"
+        message["From"] = SMTP_EMAIL
+        message["To"] = recipient_email
+        
+        # Plain text email body
+        text = f"""Email OTP Verification
+
+Your OTP verification code is: {otp_code}
+
+This code will expire in 10 minutes.
+
+If you did not request this code, please ignore this email.
+
+Regards,
+Email OTP Verification Service
+        """
         
         # HTML email body
         html = f"""\
@@ -106,48 +130,27 @@ def send_otp_email(db: Session, recipient_email: str, otp_code: str = None) -> b
 </html>
 """
         
-        # Plain text email body
-        text = f"""Email OTP Verification
-
-Your OTP verification code is: {otp_code}
-
-This code will expire in 10 minutes.
-
-If you did not request this code, please ignore this email.
-
-Regards,
-Email OTP Verification Service
-"""
+        part1 = MIMEText(text, "plain")
+        part2 = MIMEText(html, "html")
+        message.attach(part1)
+        message.attach(part2)
         
-        # SendGrid API request
-        url = "https://api.sendgrid.com/v3/mail/send"
-        headers = {
-            "Authorization": f"Bearer {SENDGRID_API_KEY}",
-            "Content-Type": "application/json"
-        }
+        # Send email via Mailtrap SMTP
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.sendmail(SMTP_EMAIL, recipient_email, message.as_string())
         
-        payload = {
-            "personalizations": [
-                {
-                    "to": [{"email": recipient_email}],
-                    "subject": "Your OTP Verification Code"
-                }
-            ],
-            "from": {"email": SENDGRID_EMAIL},
-            "content": [
-                {"type": "text/plain", "value": text},
-                {"type": "text/html", "value": html}
-            ]
-        }
-        
-        response = requests.post(url, json=payload, headers=headers)
-        
-        if response.status_code in [200, 201, 202]:
-            logger.info(f"OTP email sent successfully to {recipient_email}")
-            return True
-        else:
-            logger.error(f"SendGrid API error: {response.status_code} - {response.text}")
-            return False
+        logger.info(f"OTP email sent successfully to {recipient_email}")
+        return True
+    
+    except smtplib.SMTPAuthenticationError:
+        logger.error("SMTP authentication failed. Check SMTP_USERNAME and SMTP_PASSWORD.")
+        return False
+    
+    except smtplib.SMTPException as e:
+        logger.error(f"SMTP error occurred: {str(e)}")
+        return False
     
     except Exception as e:
         logger.error(f"Error sending OTP email: {str(e)}")
