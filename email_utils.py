@@ -1,8 +1,6 @@
-import smtplib
 import random
 import string
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 from dotenv import load_dotenv
 import os
 import logging
@@ -14,12 +12,9 @@ load_dotenv()
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Ethereal Email Configuration (Free, no domain needed)
-SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.ethereal.email")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USERNAME = os.getenv("SMTP_USERNAME")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-SMTP_EMAIL = os.getenv("SMTP_EMAIL", "noreply@otpservice.com")
+# Resend Email Configuration (Real email delivery - no domain needed)
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+SENDER_EMAIL = os.getenv("SENDER_EMAIL", "noreply@otpservice.com")
 
 
 def generate_otp(length: int = 6) -> str:
@@ -37,7 +32,7 @@ def generate_otp(length: int = 6) -> str:
 
 def send_otp_email(db: Session, recipient_email: str, otp_code: str = None) -> bool:
     """
-    Generate OTP, store it in database, and send via Mailtrap SMTP.
+    Generate OTP, store it in database, and send via Resend API.
     
     Args:
         db: Database session
@@ -55,29 +50,10 @@ def send_otp_email(db: Session, recipient_email: str, otp_code: str = None) -> b
         # Store OTP in database
         store_otp(db, recipient_email, otp_code)
         
-        # Validate Mailtrap credentials are configured
-        if not SMTP_USERNAME or not SMTP_PASSWORD:
-            logger.error("SMTP_USERNAME or SMTP_PASSWORD not configured")
+        # Validate Resend API key is configured
+        if not RESEND_API_KEY:
+            logger.error("RESEND_API_KEY not configured")
             return False
-        
-        # Create email message
-        message = MIMEMultipart("alternative")
-        message["Subject"] = "Your OTP Verification Code"
-        message["From"] = SMTP_EMAIL
-        message["To"] = recipient_email
-        
-        # Plain text email body
-        text = f"""Email OTP Verification
-
-Your OTP verification code is: {otp_code}
-
-This code will expire in 10 minutes.
-
-If you did not request this code, please ignore this email.
-
-Regards,
-Email OTP Verification Service
-        """
         
         # HTML email body
         html = f"""\
@@ -130,19 +106,46 @@ Email OTP Verification Service
 </html>
 """
         
-        part1 = MIMEText(text, "plain")
-        part2 = MIMEText(html, "html")
-        message.attach(part1)
-        message.attach(part2)
+        # Plain text email body
+        text = f"""Email OTP Verification
+
+Your OTP verification code is: {otp_code}
+
+This code will expire in 10 minutes.
+
+If you did not request this code, please ignore this email.
+
+Regards,
+Email OTP Verification Service
+"""
         
-        # Send email via Mailtrap SMTP
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.sendmail(SMTP_EMAIL, recipient_email, message.as_string())
+        # Resend API request
+        url = "https://api.resend.com/emails"
+        headers = {
+            "Authorization": f"Bearer {RESEND_API_KEY}",
+            "Content-Type": "application/json"
+        }
         
-        logger.info(f"OTP email sent successfully to {recipient_email}")
-        return True
+        payload = {
+            "from": SENDER_EMAIL,
+            "to": recipient_email,
+            "subject": "Your OTP Verification Code",
+            "html": html,
+            "text": text
+        }
+        
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        
+        if response.status_code in [200, 201]:
+            logger.info(f"OTP email sent successfully to {recipient_email}")
+            return True
+        else:
+            logger.error(f"Resend API error: {response.status_code} - {response.text}")
+            return False
+    
+    except Exception as e:
+        logger.error(f"Error sending OTP email: {str(e)}")
+        return False
     
     except smtplib.SMTPAuthenticationError:
         logger.error("SMTP authentication failed. Check SMTP_USERNAME and SMTP_PASSWORD.")
