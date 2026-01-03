@@ -12,8 +12,9 @@ load_dotenv()
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Resend Email Configuration (Real email delivery - no domain needed)
-RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+# Mailgun Email Configuration (Free, no domain verification needed)
+MAILGUN_API_KEY = os.getenv("MAILGUN_API_KEY")
+MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN")
 SENDER_EMAIL = os.getenv("SENDER_EMAIL", "noreply@otpservice.com")
 
 
@@ -50,9 +51,9 @@ def send_otp_email(db: Session, recipient_email: str, otp_code: str = None) -> b
         # Store OTP in database
         store_otp(db, recipient_email, otp_code)
         
-        # Validate Resend API key is configured
-        if not RESEND_API_KEY:
-            logger.error("RESEND_API_KEY not configured")
+        # Validate Mailgun credentials are configured
+        if not MAILGUN_API_KEY or not MAILGUN_DOMAIN:
+            logger.error("MAILGUN_API_KEY or MAILGUN_DOMAIN not configured")
             return False
         
         # HTML email body
@@ -119,12 +120,8 @@ Regards,
 Email OTP Verification Service
 """
         
-        # Resend API request
-        url = "https://api.resend.com/emails"
-        headers = {
-            "Authorization": f"Bearer {RESEND_API_KEY}",
-            "Content-Type": "application/json"
-        }
+        # Mailgun API request
+        url = f"https://api.mailgun.net/v3/{MAILGUN_DOMAIN}/messages"
         
         payload = {
             "from": SENDER_EMAIL,
@@ -134,26 +131,19 @@ Email OTP Verification Service
             "text": text
         }
         
-        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        response = requests.post(
+            url,
+            auth=("api", MAILGUN_API_KEY),
+            data=payload,
+            timeout=10
+        )
         
         if response.status_code in [200, 201]:
             logger.info(f"OTP email sent successfully to {recipient_email}")
             return True
         else:
-            logger.error(f"Resend API error: {response.status_code} - {response.text}")
+            logger.error(f"Mailgun API error: {response.status_code} - {response.text}")
             return False
-    
-    except Exception as e:
-        logger.error(f"Error sending OTP email: {str(e)}")
-        return False
-    
-    except smtplib.SMTPAuthenticationError:
-        logger.error("SMTP authentication failed. Check SMTP_USERNAME and SMTP_PASSWORD.")
-        return False
-    
-    except smtplib.SMTPException as e:
-        logger.error(f"SMTP error occurred: {str(e)}")
-        return False
     
     except Exception as e:
         logger.error(f"Error sending OTP email: {str(e)}")
